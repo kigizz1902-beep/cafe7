@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDIO DOEUN | CAFE</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter for English & Noto Sans KR for Korean -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- SheetJS (XLSX) Library for Excel Import/Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            -webkit-font-smoothing: antialiased;
+        }
+        /* Custom thin modern scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffffff;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #000000;
+            border-radius: 0px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Header: Strict Minimal Black & White -->
+    <header class="border-b border-neutral-200 sticky top-0 bg-white/80 backdrop-blur-md z-40">
+        <div class="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
+            <div class="flex items-baseline space-x-2">
+                <span class="text-lg font-black tracking-widest text-black">STUDIO DOEUN.</span>
+                <span class="text-[10px] text-neutral-400 font-mono tracking-wider">CAFE & ESPRESSO</span>
+            </div>
+            <div class="flex items-center space-x-2 text-xs font-mono text-neutral-500">
+                <span class="w-1.5 h-1.5 bg-black rounded-full animate-ping"></span>
+                <span>OPEN SYSTEM</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-6 py-10 space-y-12">
+        
+        <!-- Top Workspace: Grid for Order & Cart -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <!-- Left Column: Elegant Order Form with Drink Selection (Col: 7) -->
+            <section class="lg:col-span-7 space-y-8">
+                <div class="border border-neutral-200 p-8 rounded-none bg-white">
+                    <div class="border-b border-neutral-100 pb-4 mb-6">
+                        <h2 class="text-xs font-mono tracking-widest text-neutral-400 uppercase mb-1">01 / ORDER FORM</h2>
+                        <h3 class="text-xl font-bold tracking-tight text-black">주문서 작성</h3>
+                    </div>
+
+                    <!-- Step 1: Menu Selection Button -->
+                    <div class="mb-6">
+                        <label class="block text-[11px] font-mono tracking-wider text-neutral-400 uppercase mb-3">주문 음료 선택</label>
+                        
+                        <!-- Dynamic Selection Trigger -->
+                        <button onclick="openMenuModal()" class="w-full py-4 px-5 border border-black hover:bg-black hover:text-white transition-all duration-200 text-left flex justify-between items-center text-sm font-medium">
+                            <span id="selected-drink-display" class="tracking-tight">음료를 선택해 주세요 (클릭)</span>
+                            <span class="font-mono text-xs">SELECT +</span>
+                        </button>
+                    </div>
+
+                    <!-- Customizing Area (Only visible when drink is chosen) -->
+                    <div id="form-customizer" class="hidden space-y-6 border-t border-neutral-100 pt-6 animate-fade-in">
+                        
+                        <!-- Selected Item Quick Card -->
+                        <div class="p-4 bg-neutral-50 flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <span id="form-item-emoji" class="text-2xl">☕</span>
+                                <div>
+                                    <h4 id="form-item-name" class="font-bold text-sm tracking-tight">아메리카노</h4>
+                                    <p id="form-item-price-base" class="text-xs text-neutral-500 font-mono">3,500 KRW</p>
+                                </div>
+                            </div>
+                            <button onclick="resetSelectedDrink()" class="text-xs text-neutral-400 hover:text-black hover:underline font-mono">CLEAR</button>
+                        </div>
+
+                        <!-- Temperature & Size Options side by side -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Temp Options -->
+                            <div>
+                                <label class="block text-[10px] font-mono tracking-wider text-neutral-400 uppercase mb-2">온도</label>
+                                <div class="flex border border-neutral-200">
+                                    <button onclick="setTemp('HOT')" id="btn-temp-hot" class="flex-1 py-2.5 text-xs font-semibold border-r border-neutral-200 transition-all duration-150">HOT</button>
+                                    <button onclick="setTemp('ICE')" id="btn-temp-ice" class="flex-1 py-2.5 text-xs font-semibold transition-all duration-150">ICE</button>
+                                </div>
+                            </div>
+
+                            <!-- Size Options -->
+                            <div>
+                                <label class="block text-[10px] font-mono tracking-wider text-neutral-400 uppercase mb-2">사이즈</label>
+                                <div class="flex border border-neutral-200">
+                                    <button onclick="setSize('Regular')" id="btn-size-reg" class="flex-1 py-2.5 text-xs font-semibold border-r border-neutral-200 transition-all duration-150">REGULAR</button>
+                                    <button onclick="setSize('Large')" id="btn-size-large" class="flex-1 py-2.5 text-xs font-semibold transition-all duration-150">LARGE</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sugar Selector -->
+                        <div>
+                            <label class="block text-[10px] font-mono tracking-wider text-neutral-400 uppercase mb-2">당도 조절</label>
+                            <div class="grid grid-cols-4 border border-neutral-200">
+                                <button onclick="setSweetness('0%')" id="btn-sweet-0" class="py-2.5 text-xs font-semibold border-r border-neutral-200 transition-all">0%</button>
+                                <button onclick="setSweetness('30%')" id="btn-sweet-30" class="py-2.5 text-xs font-semibold border-r border-neutral-200 transition-all">30%</button>
+                                <button onclick="setSweetness('50%')" id="btn-sweet-50" class="py-2.5 text-xs font-semibold border-r border-neutral-200 transition-all">50%</button>
+                                <button onclick="setSweetness('100%')" id="btn-sweet-100" class="py-2.5 text-xs font-semibold transition-all">100%</button>
+                            </div>
+                        </div>
+
+                        <!-- Qty & Add Button -->
+                        <div class="flex items-center justify-between border-t border-neutral-100 pt-6">
+                            <div class="flex items-center space-x-3 border border-neutral-200 p-1">
+                                <button onclick="adjustQty(-1)" class="w-8 h-8 flex items-center justify-center font-mono text-neutral-400 hover:text-black">-</button>
+                                <span id="form-item-qty" class="w-8 text-center font-mono font-bold text-sm">1</span>
+                                <button onclick="adjustQty(1)" class="w-8 h-8 flex items-center justify-center font-mono text-neutral-400 hover:text-black">+</button>
+                            </div>
+
+                            <button onclick="addSelectedToCart()" class="py-3 px-6 bg-black text-white text-xs font-mono tracking-widest hover:bg-neutral-800 transition-colors">
+                                ADD TO BAG (<span id="form-total-display">0 KRW</span>)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review Section (사용자 후기) -->
+                <div class="border border-neutral-200 p-8 rounded-none bg-white">
+                    <div class="border-b border-neutral-100 pb-4 mb-6 flex justify-between items-baseline">
+                        <div>
+                            <h2 class="text-xs font-mono tracking-widest text-neutral-400 uppercase mb-1">02 / GUEST JOURNAL</h2>
+                            <h3 class="text-xl font-bold tracking-tight text-black">사용자 후기</h3>
+                        </div>
+                        <span id="review-stats" class="text-xs font-mono text-neutral-500">평균 4.8 / 5.0</span>
+                    </div>
+
+                    <!-- Review Form -->
+                    <div class="space-y-4 mb-8">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <input type="text" id="review-author" placeholder="작성자 성함" class="w-full p-3 border border-neutral-200 text-xs tracking-tight placeholder-neutral-400 focus:outline-none focus:border-black rounded-none">
+                            
+                            <!-- Mini Star Selector -->
+                            <div class="flex items-center justify-between border border-neutral-200 px-3 py-2">
+                                <span class="text-xs text-neutral-400 font-mono">RATING</span>
+                                <div class="flex space-x-1">
+                                    <button onclick="setReviewRating(1)" class="star-btn text-lg text-neutral-200 hover:text-black transition-colors" data-star="1">★</button>
+                                    <button onclick="setReviewRating(2)" class="star-btn text-lg text-neutral-200 hover:text-black transition-colors" data-star="2">★</button>
+                                    <button onclick="setReviewRating(3)" class="star-btn text-lg text-neutral-200 hover:text-black transition-colors" data-star="3">★</button>
+                                    <button onclick="setReviewRating(4)" class="star-btn text-lg text-neutral-200 hover:text-black transition-colors" data-star="4">★</button>
+                                    <button onclick="setReviewRating(5)" class="star-btn text-lg text-neutral-200 hover:text-black transition-colors" data-star="5">★</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <textarea id="review-content" rows="3" placeholder="스튜디오 도은 음료에 대한 소중한 한 줄 평이나 후기를 남겨주세요." class="w-full p-4 border border-neutral-200 text-xs tracking-tight placeholder-neutral-400 focus:outline-none focus:border-black rounded-none resize-none"></textarea>
+                        
+                        <button onclick="submitReview()" class="w-full py-3 bg-black hover:bg-neutral-800 text-white font-mono text-[11px] tracking-wider transition-colors">
+                            SUBMIT REVIEW
+                        </button>
+                    </div>
+
+                    <!-- Reviews Feed Container -->
+                    <div class="border-t border-neutral-100 pt-6">
+                        <h4 class="text-[10px] font-mono tracking-widest text-neutral-400 uppercase mb-4">LATEST JOURNAL FEED</h4>
+                        <div id="reviews-feed" class="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                            <!-- Dynamic reviews injected here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Sidebar Cart (Col: 5) -->
+            <aside class="lg:col-span-5 space-y-8">
+                <div class="border border-neutral-200 p-8 rounded-none bg-white sticky top-28">
+                    <div class="border-b border-neutral-100 pb-4 mb-6 flex justify-between items-baseline">
+                        <div>
+                            <h2 class="text-xs font-mono tracking-widest text-neutral-400 uppercase mb-1">YOUR BAG</h2>
+                            <h3 class="text-xl font-bold tracking-tight text-black">선택 품목</h3>
+                        </div>
+                        <button onclick="clearCart()" class="text-[10px] font-mono text-neutral-400 hover:text-black uppercase">CLEAR ALL</button>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="cart-empty" class="py-12 text-center space-y-3">
+                        <span class="text-3xl filter grayscale opacity-40">☕</span>
+                        <p class="text-xs text-neutral-400 tracking-tight leading-relaxed">아직 주문서에 담긴 음료가 없습니다.<br>왼쪽 폼에서 음료를 선택해 추가해 주세요.</p>
+                    </div>
+
+                    <!-- Cart Feed -->
+                    <div id="cart-items" class="hidden space-y-4 max-h-[280px] overflow-y-auto pr-1">
+                        <!-- Dynamic cart list -->
+                    </div>
+
+                    <!-- Payment Summary Block -->
+                    <div class="border-t border-neutral-100 pt-6 mt-6 space-y-4">
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-xs font-mono text-neutral-400 uppercase">SUBTOTAL</span>
+                            <span id="cart-total" class="text-lg font-black tracking-tight text-black">0 KRW</span>
+                        </div>
+                        
+                        <button onclick="checkout()" id="checkout-btn" disabled class="w-full py-4 bg-neutral-100 text-neutral-400 font-mono text-xs tracking-widest cursor-not-allowed transition-all">
+                            PLACE ORDER →
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Bottom Full Section: 03 / Archived Database -->
+        <section class="border border-neutral-200 p-8 rounded-none bg-white">
+            <div class="border-b border-neutral-100 pb-4 mb-6 flex flex-col md:flex-row justify-between items-start md:items-baseline space-y-4 md:space-y-0">
+                <div>
+                    <h2 class="text-xs font-mono tracking-widest text-neutral-400 uppercase mb-1">03 / ARCHIVED DATABASE</h2>
+                    <h3 class="text-xl font-bold tracking-tight text-black">주문 내역 관리</h3>
+                </div>
+                <!-- Action Buttons: Excel controllers -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="triggerExcelImport()" class="px-4 py-2 border border-neutral-200 hover:border-black text-black text-xs font-mono tracking-wider transition-colors bg-white">
+                        IMPORT EXCEL (엑셀 불러오기)
+                    </button>
+                    <button onclick="exportToExcel()" class="px-4 py-2 bg-black hover:bg-neutral-800 text-white text-xs font-mono tracking-wider transition-colors">
+                        EXPORT EXCEL (엑셀로 내려받기)
+                    </button>
+                    <button onclick="clearArchivedOrders()" class="px-4 py-2 border border-red-200 hover:border-red-600 text-red-500 hover:text-red-700 text-xs font-mono tracking-wider transition-colors bg-white">
+                        DELETE ALL (전체 삭제)
+                    </button>
+                    <!-- Hidden Excel Input file element -->
+                    <input type="file" id="excel-file-input" class="hidden" accept=".xlsx, .xls" onchange="importFromExcel(event)">
+                </div>
+            </div>
+
+            <!-- Database Table View -->
+            <div class="overflow-x-auto w-full">
+                <table class="w-full text-left text-xs font-mono border-collapse">
+                    <thead>
+                        <tr class="border-b border-neutral-200 bg-neutral-50 text-[10px] text-neutral-400 uppercase tracking-wider">
+                            <th class="py-3 px-4 font-semibold">주문 번호 (ID)</th>
+                            <th class="py-3 px-4 font-semibold">주문 일시</th>
+                            <th class="py-3 px-4 font-semibold">음료명</th>
+                            <th class="py-3 px-4 font-semibold text-center">온도</th>
+                            <th class="py-3 px-4 text-center">사이즈</th>
+                            <th class="py-3 px-4 text-center">당도</th>
+                            <th class="py-3 px-4 text-center">수량</th>
+                            <th class="py-3 px-4 text-right">단가 (KRW)</th>
+                            <th class="py-3 px-4 text-right">총액 (KRW)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="database-tbody" class="divide-y divide-neutral-100 text-black">
+                        <!-- Dynamic Excel Records -->
+                    </tbody>
+                </table>
+                <!-- Empty table state -->
+                <div id="database-empty" class="py-12 text-center border-b border-neutral-100">
+                    <p class="text-xs text-neutral-400 font-mono">NO RECORDED ORDERS FOUND. ARCHIVE AN ORDER TO VIEW IN TABLE.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer: Studio Minimalist -->
+    <footer class="border-t border-neutral-200 bg-white py-10 mt-20">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-[11px] font-mono text-neutral-400 space-y-4 md:space-y-0">
+            <p>© 2026 STUDIO DOEUN. SYSTEM ALL RIGHTS RESERVED.</p>
+            <div class="flex space-x-6">
+                <a href="#" class="hover:text-black">TERMS OF USE</a>
+                <a href="#" class="hover:text-black">PRIVACY POLICY</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Monochrome Modern Modal: Menu Selection Grid -->
+    <div id="menu-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white border border-neutral-200 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-neutral-100 flex justify-between items-center bg-white">
+                <div>
+                    <h3 class="text-xs font-mono tracking-widest text-neutral-400 uppercase">MENU LIST</h3>
+                    <h4 class="text-lg font-bold text-black tracking-tight">음료 선택하기</h4>
+                </div>
+                <button onclick="closeMenuModal()" class="w-8 h-8 flex items-center justify-center border border-neutral-200 hover:border-black text-black font-mono text-xs">✕</button>
+            </div>
+
+            <!-- Categories filter bar inside modal -->
+            <div class="px-6 py-3 border-b border-neutral-100 bg-neutral-50 flex space-x-2 overflow-x-auto scrollbar-none">
+                <button onclick="filterCategory('all')" id="tab-all" class="category-tab px-4 py-1.5 text-xs font-mono tracking-wider transition-all bg-black text-white border border-black">ALL</button>
+                <button onclick="filterCategory('coffee')" id="tab-coffee" class="category-tab px-4 py-1.5 text-xs font-mono tracking-wider transition-all bg-white text-neutral-500 hover:text-black border border-neutral-200">COFFEE</button>
+                <button onclick="filterCategory('tea')" id="tab-tea" class="category-tab px-4 py-1.5 text-xs font-mono tracking-wider transition-all bg-white text-neutral-500 hover:text-black border border-neutral-200">TEA</button>
+                <button onclick="filterCategory('ade')" id="tab-ade" class="category-tab px-4 py-1.5 text-xs font-mono tracking-wider transition-all bg-white text-neutral-500 hover:text-black border border-neutral-200">ADE & JUICE</button>
+            </div>
+
+            <!-- Modal Content (Grid scrollable) -->
+            <div class="p-6 overflow-y-auto bg-white flex-grow">
+                <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Javascript populates items -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Minimalist Digital Receipt Modal -->
+    <div id="receipt-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white border border-neutral-200 w-full max-w-sm overflow-hidden flex flex-col p-6 font-mono text-xs text-black">
+            
+            <!-- Receipt Header -->
+            <div class="text-center border-b border-dashed border-neutral-300 pb-4 mb-4">
+                <h3 class="text-base font-black tracking-widest uppercase">STUDIO DOEUN</h3>
+                <p class="text-[9px] text-neutral-400 mt-1">SEOUL, SOUTH KOREA</p>
+                <p id="receipt-date" class="text-[9px] text-neutral-400 mt-0.5">DATE: 2026-06-30 14:06:00</p>
+                <p id="receipt-id-display" class="text-[9px] text-neutral-400">ORDER NO: #DE-9021</p>
+            </div>
+
+            <!-- Receipt Content -->
+            <div id="receipt-items" class="space-y-3 border-b border-dashed border-neutral-300 pb-4 mb-4">
+                <!-- Inserted dynamically -->
+            </div>
+
+            <!-- Total Price Block -->
+            <div class="flex justify-between items-baseline text-sm font-black mb-6">
+                <span>TOTAL</span>
+                <span id="receipt-total" class="text-base">0 KRW</span>
+            </div>
+
+            <div class="bg-neutral-50 p-4 text-center text-[10px] text-neutral-600 leading-relaxed border border-neutral-100 mb-6">
+                THANK YOU FOR ORDERING.<br>
+                YOUR DRINK IS NOW PREPARING.<br>
+                STUDIO DOEUN SYSTEM
+            </div>
+
+            <button onclick="completeCheckoutFlow()" class="w-full py-3 bg-black hover:bg-neutral-800 text-white font-mono text-xs tracking-widest transition-all">
+                CONFIRM & ARCHIVE
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-black text-white px-5 py-3 rounded-none text-xs font-mono tracking-wide shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none z-50 flex items-center space-x-3">
+        <span>●</span>
+        <span id="toast-msg">TOAST MESSAGE STATE</span>
+    </div>
+
+    <!-- Modern Javascript Logic -->
+    <script>
+        // Data Store: Elegant minimal items
+        const menuItems = [
+            { id: 1, name: "시그니처 바닐라 빈 라떼", category: "coffee", price: 4800, emoji: "☕", desc: "진짜 바닐라 빈을 정성껏 끓여내어 깊고 고급스러운 달콤함" },
+            { id: 2, name: "아메리카노 (Cozy Blend)", category: "coffee", price: 3500, emoji: "☕", desc: "다크 초콜릿의 묵직한 바디감과 고소한 아몬드 향미" },
+            { id: 3, name: "카페 라떼", category: "coffee", price: 4100, emoji: "🥛", desc: "부드럽고 고소한 우유와 에스프레소의 깔끔한 조화" },
+            { id: 4, name: "아인슈페너", category: "coffee", price: 5300, emoji: "🧁", desc: "달콤하고 쫀쫀한 수제 수프림 크림을 얹은 블랙커피" },
+            { id: 5, name: "유기농 말차 라떼", category: "tea", price: 4900, emoji: "🍵", desc: "제주 유기농 말차의 진하고 쌉싸름한 오리지널 말차 라떼" },
+            { id: 6, name: "허니 자몽 블랙티", category: "tea", price: 5000, emoji: "🍹", desc: "달콤한 꿀 자몽청과 은은한 홍차의 싱그러운 밸런스" },
+            { id: 7, name: "청포도 라임 에이드", category: "ade", price: 5200, emoji: "💚", desc: "상큼한 청포도 베이스와 생라임 즙이 톡톡 터지는 탄산" },
+            { id: 8, name: "제주 한라봉 주스", category: "ade", price: 5500, emoji: "🍊", desc: "물이 한 방울도 섞이지 않은 100% 한라봉 생과일 착즙" }
+        ];
+
+        // Review Initial Database
+        let reviews = [
+            { id: 1, author: "김도은", rating: 5, content: "바닐라 빈 라떼가 정말 고급스러우면서 과하게 달지 않아 매일 마시기 너무 좋네요. 공간도 디자인도 최고입니다.", date: "2026.06.30" },
+            { id: 2, author: "이민우", rating: 4, content: "아인슈페너 위에 얹은 크림이 아주 쫀득쫀득하고 매력적이네요. 블랙&화이트 인테리어가 깔끔해서 분위기가 납니다.", date: "2026.06.29" }
+        ];
+
+        // Main State Machine
+        let cart = [];
+        let currentCustomItem = null;
+        let selectedTemp = 'ICE';
+        let selectedSize = 'Regular';
+        let selectedSweetness = '50%';
+        let selectedQty = 1;
+        let currentReviewRating = 5;
+
+        // Archive State Machine (Orders saved to database/Excel list)
+        let archivedOrders = [];
+        let currentPendingOrderId = "";
+        let currentPendingOrderDate = "";
+
+        // Startup Hooks
+        window.onload = function() {
+            // Load archived orders from localStorage if exists
+            const storedOrders = localStorage.getItem("studio_doeun_archives");
+            if (storedOrders) {
+                try {
+                    archivedOrders = JSON.parse(storedOrders);
+                } catch(e) {
+                    archivedOrders = [];
+                }
+            }
+            
+            renderMenu('all');
+            renderReviews();
+            updateCartUI();
+            updateArchivedOrdersTable();
+            setReviewRating(currentReviewRating); // default 5 star rating
+        };
+
+        // Open Modal to Select Drink
+        function openMenuModal() {
+            document.getElementById('menu-modal').classList.remove('hidden');
+        }
+
+        function closeMenuModal() {
+            document.getElementById('menu-modal').classList.add('hidden');
+        }
+
+        // Render Menu in Grid
+        function renderMenu(category) {
+            const grid = document.getElementById('menu-grid');
+            grid.innerHTML = '';
+
+            const filtered = category === 'all' ? menuItems : menuItems.filter(item => item.category === category);
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "group border border-neutral-200 p-4 transition-all hover:border-black cursor-pointer bg-white flex flex-col justify-between";
+                card.onclick = () => selectDrinkForForm(item);
+
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-xs font-mono text-neutral-400 uppercase tracking-widest">${item.category}</span>
+                            <span class="text-sm font-mono tracking-tight text-neutral-400">${item.emoji}</span>
+                        </div>
+                        <h4 class="font-bold text-sm tracking-tight text-black group-hover:underline">${item.name}</h4>
+                        <p class="text-[11px] text-neutral-500 leading-relaxed tracking-tight">${item.desc}</p>
+                    </div>
+                    <div class="border-t border-neutral-100 pt-3 mt-4 flex justify-between items-center">
+                        <span class="text-xs font-mono font-bold">${item.price.toLocaleString()} KRW</span>
+                        <span class="text-[10px] font-mono tracking-wider text-black bg-neutral-100 px-2 py-1 group-hover:bg-black group-hover:text-white transition-all">SELECT</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Category filtering inside popup Menu
+        function filterCategory(category) {
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.className = "category-tab px-4 py-1.5 text-xs font-mono tracking-wider transition-all bg-white text-neutral-500 hover:text-black border border-neutral-200";
+            });
+
+            const activeTab = document.getElementById(`tab-${category}`);
+            if(activeTab) {
+                activeTab.className = "category-tab px-4 py-1.5 text-xs font-mono tracking-wider transition-all bg-black text-white border border-black";
+            }
+
+            renderMenu(category);
+        }
+
+        // Form Interaction Setup
+        function selectDrinkForForm(item) {
+            currentCustomItem = item;
+            
+            // Default options
+            selectedTemp = 'ICE';
+            selectedSize = 'Regular';
+            selectedSweetness = '50%';
+            selectedQty = 1;
+
+            // Fill form metadata
+            document.getElementById('selected-drink-display').innerText = `${item.name} (선택됨)`;
+            document.getElementById('form-item-name').innerText = item.name;
+            document.getElementById('form-item-emoji').innerText = item.emoji;
+            document.getElementById('form-item-price-base').innerText = `${item.price.toLocaleString()} KRW`;
+            document.getElementById('form-item-qty').innerText = selectedQty;
+
+            // Reveal customized drawer
+            document.getElementById('form-customizer').classList.remove('hidden');
+
+            updateOptionButtons();
+            calculateCustomTotal();
+            closeMenuModal();
+        }
+
+        function resetSelectedDrink() {
+            currentCustomItem = null;
+            document.getElementById('selected-drink-display').innerText = "음료를 선택해 주세요 (클릭)";
+            document.getElementById('form-customizer').classList.add('hidden');
+        }
+
+        // Option controls
+        function setTemp(temp) {
+            selectedTemp = temp;
+            updateOptionButtons();
+        }
+
+        function setSize(size) {
+            selectedSize = size;
+            updateOptionButtons();
+            calculateCustomTotal();
+        }
+
+        function setSweetness(sweet) {
+            selectedSweetness = sweet;
+            updateOptionButtons();
+        }
+
+        function adjustQty(amount) {
+            selectedQty = Math.max(1, selectedQty + amount);
+            document.getElementById('form-item-qty').innerText = selectedQty;
+            calculateCustomTotal();
+        }
+
+        // Sync visual feedback on customizer buttons
+        function updateOptionButtons() {
+            // Temp styling
+            const hotBtn = document.getElementById('btn-temp-hot');
+            const iceBtn = document.getElementById('btn-temp-ice');
+            if(selectedTemp === 'HOT') {
+                hotBtn.className = "flex-1 py-2.5 text-xs font-semibold bg-black text-white border-r border-neutral-200 transition-all duration-150";
+                iceBtn.className = "flex-1 py-2.5 text-xs font-semibold bg-white text-neutral-400 hover:text-black transition-all duration-150";
+            } else {
+                hotBtn.className = "flex-1 py-2.5 text-xs font-semibold bg-white text-neutral-400 hover:text-black border-r border-neutral-200 transition-all duration-150";
+                iceBtn.className = "flex-1 py-2.5 text-xs font-semibold bg-black text-white transition-all duration-150";
+            }
+
+            // Size styling
+            const regBtn = document.getElementById('btn-size-reg');
+            const largeBtn = document.getElementById('btn-size-large');
+            if(selectedSize === 'Regular') {
+                regBtn.className = "flex-1 py-2.5 text-xs font-semibold bg-black text-white border-r border-neutral-200 transition-all duration-150";
+                largeBtn.className = "flex-1 py-2.5 text-xs font-semibold bg-white text-neutral-400 hover:text-black transition-all duration-150";
+            } else {
+                regBtn.className = "flex-1 py-2.5 text-xs font-semibold bg-white text-neutral-400 hover:text-black border-r border-neutral-200 transition-all duration-150";
+                largeBtn.className = "flex-1 py-2.5 text-xs font-semibold bg-black text-white transition-all duration-150";
+            }
+
+            // Sweetness selector
+            const sweets = ['0', '30', '50', '100'];
+            sweets.forEach(sw => {
+                const btn = document.getElementById(`btn-sweet-${sw}`);
+                if(selectedSweetness === `${sw}%`) {
+                    btn.className = "py-2.5 text-xs font-semibold bg-black text-white transition-all w-full text-center";
+                } else {
+                    btn.className = "py-2.5 text-xs font-semibold bg-white text-neutral-400 hover:text-black transition-all w-full text-center border-r border-neutral-200 last:border-0";
+                }
+            });
+        }
+
+        function calculateCustomTotal() {
+            if(!currentCustomItem) return;
+            const extraPrice = selectedSize === 'Large' ? 500 : 0;
+            const itemTotal = (currentCustomItem.price + extraPrice) * selectedQty;
+            document.getElementById('form-total-display').innerText = `${itemTotal.toLocaleString()} KRW`;
+        }
+
+        // Add Customized Drink to the Sidebar Bag
+        function addSelectedToCart() {
+            if(!currentCustomItem) return;
+
+            const extraPrice = selectedSize === 'Large' ? 500 : 0;
+            const unitPrice = currentCustomItem.price + extraPrice;
+
+            const bagItem = {
+                id: Date.now() + Math.random().toString(36).substr(2, 5),
+                menuId: currentCustomItem.id,
+                name: currentCustomItem.name,
+                emoji: currentCustomItem.emoji,
+                temp: selectedTemp,
+                size: selectedSize,
+                sweetness: selectedSweetness,
+                qty: selectedQty,
+                unitPrice: unitPrice,
+                totalPrice: unitPrice * selectedQty
+            };
+
+            cart.push(bagItem);
+            updateCartUI();
+            resetSelectedDrink();
+            showToast("SUCCESSFULLY ADDED TO YOUR BAG");
+        }
+
+        // Cart Interface Sync
+        function updateCartUI() {
+            const emptyState = document.getElementById('cart-empty');
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            const checkoutBtn = document.getElementById('checkout-btn');
+
+            if(cart.length === 0) {
+                emptyState.classList.remove('hidden');
+                cartItemsContainer.classList.add('hidden');
+                cartTotal.innerText = '0 KRW';
+
+                checkoutBtn.disabled = true;
+                checkoutBtn.className = "w-full py-4 bg-neutral-100 text-neutral-400 font-mono text-xs tracking-widest cursor-not-allowed transition-all";
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            cartItemsContainer.classList.remove('hidden');
+
+            checkoutBtn.disabled = false;
+            checkoutBtn.className = "w-full py-4 bg-black hover:bg-neutral-800 text-white font-mono text-xs tracking-widest transition-all";
+
+            cartItemsContainer.innerHTML = '';
+            let totalAccumulated = 0;
+
+            cart.forEach(item => {
+                totalAccumulated += item.totalPrice;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "border border-neutral-200 p-4 bg-white flex justify-between items-start text-xs font-mono";
+                wrapper.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-1.5 font-bold text-black tracking-tight text-sm">
+                            <span>${item.emoji}</span>
+                            <span>${item.name}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 text-[9px] text-neutral-400 font-medium pt-1">
+                            <span class="px-1 py-0.5 border border-neutral-200">${item.temp}</span>
+                            <span class="px-1 py-0.5 border border-neutral-200">${item.size.toUpperCase()}</span>
+                            <span class="px-1 py-0.5 border border-neutral-200">SUGAR ${item.sweetness}</span>
+                            <span class="px-1 py-0.5 bg-neutral-100 text-black">x${item.qty}</span>
+                        </div>
+                    </div>
+                    <div class="text-right flex flex-col justify-between items-end h-full">
+                        <button onclick="removeFromCart('${item.id}')" class="text-neutral-400 hover:text-black transition-colors">✕</button>
+                        <span class="font-black text-black mt-3 text-xs tracking-tight">${item.totalPrice.toLocaleString()} KRW</span>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(wrapper);
+            });
+
+            cartTotal.innerText = `${totalAccumulated.toLocaleString()} KRW`;
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+            showToast("ITEM REMOVED FROM BAG");
+        }
+
+        function clearCart() {
+            if(cart.length === 0) return;
+            cart = [];
+            updateCartUI();
+            showToast("BAG CLEARED COMPLETELY");
+        }
+
+        // Set Review Rating state
+        function setReviewRating(rating) {
+            currentReviewRating = rating;
+            
+            document.querySelectorAll('.star-btn').forEach(btn => {
+                const starVal = parseInt(btn.getAttribute('data-star'));
+                if(starVal <= rating) {
+                    btn.className = "star-btn text-lg text-black transition-colors";
+                } else {
+                    btn.className = "star-btn text-lg text-neutral-200 transition-colors";
+                }
+            });
+        }
+
+        // Submit new custom user review
+        function submitReview() {
+            const authorInput = document.getElementById('review-author');
+            const contentInput = document.getElementById('review-content');
+
+            const author = authorInput.value.trim() || "익명";
+            const content = contentInput.value.trim();
+
+            if(!content) {
+                showToast("리뷰 내용을 입력해 주세요.");
+                return;
+            }
+
+            const now = new Date();
+            const formattedDate = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')}`;
+
+            const newReview = {
+                id: Date.now(),
+                author: author,
+                rating: currentReviewRating,
+                content: content,
+                date: formattedDate
+            };
+
+            reviews.unshift(newReview);
+            renderReviews();
+
+            // Clear input fields
+            authorInput.value = '';
+            contentInput.value = '';
+            setReviewRating(5); // Reset to default 5 stars
+
+            showToast("REVIEW SUBMITTED SUCCESSFULLY");
+        }
+
+        // Redraw Review Feeds & Stats
+        function renderReviews() {
+            const feed = document.getElementById('reviews-feed');
+            const stats = document.getElementById('review-stats');
+            
+            feed.innerHTML = '';
+
+            if(reviews.length === 0) {
+                feed.innerHTML = `<p class="text-xs text-neutral-400 text-center py-6 font-mono">NO REVIEWS YET. BE THE FIRST!</p>`;
+                stats.innerText = '0.0 / 5.0';
+                return;
+            }
+
+            let ratingSum = 0;
+
+            reviews.forEach(rv => {
+                ratingSum += rv.rating;
+
+                const starString = '★'.repeat(rv.rating) + '☆'.repeat(5 - rv.rating);
+                const reviewCard = document.createElement('div');
+                reviewCard.className = "border border-neutral-100 p-4 space-y-2 bg-white transition-all hover:bg-neutral-50";
+                
+                reviewCard.innerHTML = `
+                    <div class="flex justify-between items-baseline font-mono text-[10px]">
+                        <div class="space-x-2">
+                            <span class="font-bold text-black">${rv.author}</span>
+                            <span class="text-neutral-400">${starString}</span>
+                        </div>
+                        <span class="text-neutral-400">${rv.date}</span>
+                    </div>
+                    <p class="text-xs text-neutral-700 tracking-tight leading-relaxed">${rv.content}</p>
+                `;
+                feed.appendChild(reviewCard);
+            });
+
+            const avgRating = (ratingSum / reviews.length).toFixed(1);
+            stats.innerText = `평균 ${avgRating} / 5.0 (${reviews.length}개 후기)`;
+        }
+
+        // Open Receipt Details Screen
+        function checkout() {
+            if(cart.length === 0) return;
+
+            const modal = document.getElementById('receipt-modal');
+            const receiptItems = document.getElementById('receipt-items');
+            const receiptTotal = document.getElementById('receipt-total');
+            const receiptDate = document.getElementById('receipt-date');
+            const receiptIdDisplay = document.getElementById('receipt-id-display');
+
+            // Set receipt temporary ID
+            currentPendingOrderId = `DE-${Date.now().toString().slice(-4)}`;
+
+            // Clock update
+            const now = new Date();
+            currentPendingOrderDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            
+            receiptDate.innerText = `DATE: ${currentPendingOrderDate}`;
+            receiptIdDisplay.innerText = `ORDER NO: #${currentPendingOrderId}`;
+
+            receiptItems.innerHTML = '';
+            let finalSum = 0;
+
+            cart.forEach(item => {
+                finalSum += item.totalPrice;
+                const row = document.createElement('div');
+                row.className = "flex justify-between items-start py-1";
+                row.innerHTML = `
+                    <div class="max-w-[70%]">
+                        <p class="font-bold text-black">${item.name}</p>
+                        <p class="text-[9px] text-neutral-400">(${item.temp} / ${item.size} / SUGAR ${item.sweetness})</p>
+                    </div>
+                    <div class="text-right font-mono">
+                        <p>${item.qty} QTY</p>
+                        <p class="font-bold text-black">${item.totalPrice.toLocaleString()} KRW</p>
+                    </div>
+                `;
+                receiptItems.appendChild(row);
+            });
+
+            receiptTotal.innerText = `${finalSum.toLocaleString()} KRW`;
+            modal.classList.remove('hidden');
+        }
+
+        // Complete Checkout Flow and Save to Local State
+        function completeCheckoutFlow() {
+            // Archive cart items into database before clearing
+            cart.forEach(item => {
+                const archiveRecord = {
+                    orderId: currentPendingOrderId,
+                    orderDate: currentPendingOrderDate,
+                    name: item.name,
+                    temp: item.temp,
+                    size: item.size,
+                    sweetness: item.sweetness,
+                    qty: item.qty,
+                    unitPrice: item.unitPrice,
+                    totalPrice: item.totalPrice
+                };
+                archivedOrders.unshift(archiveRecord); // newest first
+            });
+
+            // Save to localStorage
+            localStorage.setItem("studio_doeun_archives", JSON.stringify(archivedOrders));
+
+            // Sync Database table UI
+            updateArchivedOrdersTable();
+
+            // Close Modal
+            document.getElementById('receipt-modal').classList.add('hidden');
+            cart = [];
+            updateCartUI();
+            showToast("ORDER ARCHIVED TO DATABASE");
+        }
+
+        // Update Archived Orders Table UI
+        function updateArchivedOrdersTable() {
+            const tbody = document.getElementById('database-tbody');
+            const emptyState = document.getElementById('database-empty');
+
+            tbody.innerHTML = '';
+
+            if (archivedOrders.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            archivedOrders.forEach(ord => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-neutral-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-neutral-900">#${ord.orderId}</td>
+                    <td class="py-3 px-4 text-neutral-500">${ord.orderDate}</td>
+                    <td class="py-3 px-4 font-semibold text-black">${ord.name}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="px-2 py-0.5 text-[9px] ${ord.temp === 'HOT' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-blue-50 text-blue-600 border border-blue-200'}">${ord.temp}</span>
+                    </td>
+                    <td class="py-3 px-4 text-center text-neutral-500">${ord.size}</td>
+                    <td class="py-3 px-4 text-center text-neutral-500">${ord.sweetness}</td>
+                    <td class="py-3 px-4 text-center font-bold text-black">${ord.qty}</td>
+                    <td class="py-3 px-4 text-right text-neutral-600">${ord.unitPrice.toLocaleString()}</td>
+                    <td class="py-3 px-4 text-right font-bold text-black">${ord.totalPrice.toLocaleString()}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Trigger hidden Excel Input file element
+        function triggerExcelImport() {
+            document.getElementById('excel-file-input').click();
+        }
+
+        // Excel Import handler
+        function importFromExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Parse the first sheet
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const parsedData = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (parsedData.length === 0) {
+                        showToast("빈 엑셀 파일이거나 형식이 맞지 않습니다.");
+                        return;
+                    }
+
+                    // Map Korean Excel headers back to system objects
+                    const importedList = parsedData.map(row => {
+                        return {
+                            orderId: row['주문번호'] ? String(row['주문번호']).replace('#', '') : 'UNKNOWN',
+                            orderDate: row['주문일시'] || 'N/A',
+                            name: row['음료명'] || '미확정 음료',
+                            temp: row['온도'] || 'ICE',
+                            size: row['사이즈'] || 'Regular',
+                            sweetness: row['당도'] || '50%',
+                            qty: parseInt(row['수량']) || 1,
+                            unitPrice: parseInt(row['단가(KRW)']) || 0,
+                            totalPrice: parseInt(row['총액(KRW)']) || 0
+                        };
+                    });
+
+                    // Add unique validation and append or load
+                    archivedOrders = importedList.concat(archivedOrders);
+                    localStorage.setItem("studio_doeun_archives", JSON.stringify(archivedOrders));
+                    updateArchivedOrdersTable();
+                    showToast("EXCEL RECOVERED SUCCESSFULLY");
+
+                } catch (error) {
+                    showToast("엑셀 파일 로딩 중 오류가 발생했습니다.");
+                    console.error(error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            // Reset input file value to allow importing the same file again
+            event.target.value = "";
+        }
+
+        // Excel Export implementation using SheetJS
+        function exportToExcel() {
+            if (archivedOrders.length === 0) {
+                showToast("내려받을 주문 내역이 없습니다.");
+                return;
+            }
+
+            // Convert archived items to structured Korean-labeled JSON
+            const exportData = archivedOrders.map(ord => {
+                return {
+                    '주문번호': `#${ord.orderId}`,
+                    '주문일시': ord.orderDate,
+                    '음료명': ord.name,
+                    '온도': ord.temp,
+                    '사이즈': ord.size,
+                    '당도': ord.sweetness,
+                    '수량': ord.qty,
+                    '단가(KRW)': ord.unitPrice,
+                    '총액(KRW)': ord.totalPrice
+                };
+            });
+
+            try {
+                // Initialize Worksheet
+                const ws = XLSX.utils.json_to_sheet(exportData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Orders");
+
+                // Generate and download Excel
+                XLSX.writeFile(wb, `STUDIO_DOEUN_ORDERS_${Date.now()}.xlsx`);
+                showToast("EXCEL DOWNLOADED SUCCESSFULLY");
+            } catch (err) {
+                showToast("엑셀 파일 저장에 실패했습니다.");
+                console.error(err);
+            }
+        }
+
+        // Clear all elements in Database lists
+        function clearArchivedOrders() {
+            if (archivedOrders.length === 0) {
+                showToast("이미 비어 있는 상태입니다.");
+                return;
+            }
+
+            archivedOrders = [];
+            localStorage.removeItem("studio_doeun_archives");
+            updateArchivedOrdersTable();
+            showToast("ARCHIVE CLEARED COMPLETELY");
+        }
+
+        // Custom Minimalist Toast System
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgSpan = document.getElementById('toast-msg');
+            msgSpan.innerText = message;
+
+            toast.className = "fixed bottom-6 right-6 bg-black text-white px-5 py-3 rounded-none text-xs font-mono tracking-wide shadow-2xl transition-all duration-300 transform translate-y-0 opacity-100 z-50 flex items-center space-x-3";
+            
+            setTimeout(() => {
+                toast.className = "fixed bottom-6 right-6 bg-black text-white px-5 py-3 rounded-none text-xs font-mono tracking-wide shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none z-50 flex items-center space-x-3";
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
